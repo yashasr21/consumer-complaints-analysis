@@ -24,6 +24,16 @@ def read_csv(name):
     return pd.read_csv(path) if os.path.exists(path) else None
 
 
+def records(df):
+    """to_dict('records'), but with NaN turned into None.
+
+    json.dump writes a bare NaN for a pandas null, which is not valid JSON -
+    the browser refuses the whole file and every panel falls back to its empty
+    state. This is why the dashboard looked unrun when it was not.
+    """
+    return df.astype(object).where(pd.notna(df), None).to_dict("records")
+
+
 def read_json(name):
     path = os.path.join("docs", name)
     if os.path.exists(path):
@@ -50,29 +60,31 @@ def main():
 
     q2 = read_csv("q2_top_companies_relief_rate")
     if q2 is not None:
-        fig["top_companies"] = q2.head(8).to_dict("records")
+        fig["top_companies"] = records(q2.head(8))
 
     q4 = read_csv("q4_relief_by_product")
     if q4 is not None:
-        fig["by_product"] = q4.to_dict("records")
+        fig["by_product"] = records(q4)
 
     q5 = read_csv("q5_relief_by_channel")
     if q5 is not None:
-        fig["by_channel"] = q5.to_dict("records")
+        fig["by_channel"] = records(q5)
 
     q1 = read_csv("q1_volume_by_product_year")
     if q1 is not None:
         top = (q1.groupby("product")["complaints"].sum()
                  .sort_values(ascending=False).head(6).index.tolist())
-        fig["volume_by_year"] = q1[q1["product"].isin(top)].to_dict("records")
+        fig["volume_by_year"] = records(q1[q1["product"].isin(top)])
 
     feat = os.path.join("docs", "feature_rates.csv")
     if os.path.exists(feat):
         fr = pd.read_csv(feat).dropna(subset=["lift_pct_points"])
-        fig["feature_lift"] = fr.head(8).to_dict("records")
+        fig["feature_lift"] = records(fr.head(8))
 
     with open(OUT, "w", encoding="utf-8") as f:
-        json.dump(fig, f, indent=2)
+        # allow_nan=False makes this fail loudly rather than writing a file
+        # the browser will silently reject.
+        json.dump(fig, f, indent=2, allow_nan=False)
 
     have = [k for k in ("rows_analysed", "model", "top_companies", "by_product",
                         "by_channel", "volume_by_year", "feature_lift") if k in fig]

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>What makes a consumer complaint escalate</title>
+<title>What makes a complaint cost money</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -128,8 +128,8 @@ a:focus-visible,tr:focus-visible{outline:3px solid var(--gold);outline-offset:3p
 
   <header class="mast">
     <span class="kicker">CFPB Consumer Complaint Database</span>
-    <h1>What makes a consumer complaint escalate</h1>
-    <p>Most complaints close quietly. A minority turn into disputes, and those cost far more to
+    <h1>What makes a complaint cost money</h1>
+    <p>Most complaints close with an explanation. A minority end with the company paying the person, and those cost far more to
        resolve. This looks at which ones, using the complaint text that arrives on day one.
        Built by <a href="https://github.com/yashasr21">Yashas R</a>.</p>
   </header>
@@ -146,34 +146,34 @@ a:focus-visible,tr:focus-visible{outline:3px solid var(--gold);outline-offset:3p
   <div class="chips" id="chips"></div>
 
   <section class="panel">
-    <h3>Does paying people out stop the argument?</h3>
-    <p class="sub">Dispute rate by how the company closed the complaint. The interesting case is
-       monetary relief &mdash; if it does not lower the rate, money is not what the complaint was about.</p>
-    <div id="by-response"></div>
+    <h3>Which products cost money</h3>
+    <p class="sub">Share of complaints closed with monetary relief, by product. Volume and cost do not
+       rank the same way &mdash; that gap is the finding.</p>
+    <div id="by-product"></div>
   </section>
 
   <div class="grid2">
     <section class="panel">
       <h3>Channel</h3>
-      <p class="sub">Dispute rate by how the complaint arrived.</p>
+      <p class="sub">Relief rate by how the complaint arrived.</p>
       <div id="by-channel"></div>
     </section>
     <section class="panel">
       <h3>What the words are worth</h3>
-      <p class="sub">Change in dispute rate when a hand-built text flag is present, in percentage points.</p>
+      <p class="sub">Change in relief rate when a hand-built text flag is present, in percentage points.</p>
       <div id="feature-lift"></div>
     </section>
   </div>
 
   <section class="panel">
     <h3>Complaint volume by product</h3>
-    <p class="sub">Yearly counts across the window where the dispute field was still collected.</p>
+    <p class="sub">Yearly counts across the three-year window this analysis covers.</p>
     <div id="volume"></div>
   </section>
 
   <section class="panel">
-    <h3>The biggest names, and their dispute rates</h3>
-    <p class="sub">Volume and dispute rate do not rank companies the same way. That gap is the
+    <h3>The biggest names, and their relief rates</h3>
+    <p class="sub">Volume and relief rate do not rank companies the same way. That gap is the
        finding, not the leaderboard.</p>
     <div id="top-companies"></div>
   </section>
@@ -187,10 +187,10 @@ a:focus-visible,tr:focus-visible{outline:3px solid var(--gold);outline-offset:3p
 
   <div class="callout">
     <p><b>What this does not tell you.</b>
-    <span id="limits">The dispute field was retired part-way through the database, so this covers
-    only the years where both a narrative and a dispute outcome exist. Complaints reaching CFPB are
-    not a random sample of unhappy customers, and a dispute is a recorded action, not a measure of
-    who was actually wronged.</span></p>
+    <span id="limits">Narratives are only published when the consumer consents, so this covers a
+    subset of all complaints. Complaints reaching CFPB are not a random sample of unhappy customers.
+    And monetary relief is a company's decision to pay, not a measure of who was actually wronged &mdash;
+    a firm that settles readily will look worse here than one that refuses.</span></p>
   </div>
 
   <footer>
@@ -247,28 +247,28 @@ function render(f){
   if(m && m.lift_vs_random){
     $("hero-num").textContent = m.lift_vs_random.toFixed(2) + "\u00d7";
     $("hero-head").textContent =
-      `Reviewing the riskiest ${m.review_capacity_pct}% catches ${m.recall_at_capacity_pct}% of disputes`;
+      `Reviewing the riskiest ${m.review_capacity_pct}% catches ${m.recall_at_capacity_pct}% of relief cases`;
     $("hero-sub").textContent =
       `That is ${m.lift_vs_random.toFixed(2)} times better than reviewing the same number at random. ` +
-      `Of the complaints flagged, ${m.precision_at_capacity_pct}% went on to be disputed, against a ` +
-      `background rate of ${m.test_dispute_rate_pct}%.`;
+      `Of the complaints flagged, ${m.precision_at_capacity_pct}% ended in monetary relief, against a ` +
+      `background rate of ${m.test_relief_rate_pct}%.`;
   }
 
   const chips = [
     ["rows_analysed", "complaints analysed", v => num(v)],
-    ["dispute_rate_pct", "went on to be disputed", v => pct(v)],
+    ["relief_rate_pct", "closed with monetary relief", v => pct(v)],
     ["window", "period covered", () => (f.window_from && f.window_to) ? f.window_from + " – " + f.window_to : "—"],
     ["auc", "ROC AUC on the held-out period", () => m ? m.roc_auc.toFixed(3) : "—"],
   ];
   $("chips").innerHTML = chips.map(([k, label, fmt]) =>
     `<div class="chip"><b>${fmt(f[k])}</b><span>${label}</span></div>`).join("");
 
-  bars($("by-response"), f.by_response, "company_response", "dispute_rate_pct", {
+  bars($("by-product"), f.by_product, "product", "relief_rate_pct", {
     stage: "python src/03_load_sqlite.py",
     colour: v => v >= 20 ? "hot" : (v >= 12 ? "warm" : "")
   });
 
-  bars($("by-channel"), f.by_channel, "submitted_via", "dispute_rate_pct", {
+  bars($("by-channel"), f.by_channel, "submitted_via", "relief_rate_pct", {
     stage: "python src/03_load_sqlite.py"
   });
 
@@ -299,7 +299,7 @@ function render(f){
   table($("top-companies"), f.top_companies, [
     {head:"Company", get:r=>r.company},
     {head:"Complaints", get:r=>num(r.complaints)},
-    {head:"Dispute rate", get:r=>pct(r.dispute_rate_pct)},
+    {head:"Relief rate", get:r=>pct(r.relief_rate_pct)},
   ], "python src/03_load_sqlite.py");
 
   if(m){
@@ -308,9 +308,9 @@ function render(f){
       <tr><td>Tested on</td><td>${num(m.test_rows)} complaints after that date</td></tr>
       <tr><td>Majority-class baseline accuracy</td><td>${pct(m.majority_baseline_accuracy_pct)}</td></tr>
       <tr><td>ROC AUC</td><td>${m.roc_auc.toFixed(3)}</td></tr>
-      <tr><td>Average precision</td><td>${m.average_precision.toFixed(3)} against ${(m.test_dispute_rate_pct/100).toFixed(3)} at random</td></tr>
+      <tr><td>Average precision</td><td>${m.average_precision.toFixed(3)} against ${(m.test_relief_rate_pct/100).toFixed(3)} at random</td></tr>
       <tr><td>Operating threshold</td><td>${m.threshold} , chosen to flag the top ${m.review_capacity_pct}%</td></tr>
-      <tr><td>Terms weighing towards dispute</td><td>${(m.top_terms||[]).slice(0,10).join(", ")}</td></tr>
+      <tr><td>Terms weighing towards relief</td><td>${(m.top_terms||[]).slice(0,10).join(", ")}</td></tr>
     </tbody></table>`;
   } else emptyState($("model"), "python src/05_model.py");
 }

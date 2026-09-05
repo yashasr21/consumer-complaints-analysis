@@ -171,8 +171,8 @@
       "product": "Checking or savings account",
       "yr": 2023,
       "complaints": 8488,
-      "prev_year": NaN,
-      "pct_change": NaN
+      "prev_year": null,
+      "pct_change": null
     },
     {
       "product": "Checking or savings account",
@@ -199,8 +199,8 @@
       "product": "Credit card",
       "yr": 2023,
       "complaints": 11847,
-      "prev_year": NaN,
-      "pct_change": NaN
+      "prev_year": null,
+      "pct_change": null
     },
     {
       "product": "Credit card",
@@ -227,8 +227,8 @@
       "product": "Credit reporting or other personal consumer reports",
       "yr": 2023,
       "complaints": 113770,
-      "prev_year": NaN,
-      "pct_change": NaN
+      "prev_year": null,
+      "pct_change": null
     },
     {
       "product": "Credit reporting or other personal consumer reports",
@@ -255,8 +255,8 @@
       "product": "Debt collection",
       "yr": 2023,
       "complaints": 11497,
-      "prev_year": NaN,
-      "pct_change": NaN
+      "prev_year": null,
+      "pct_change": null
     },
     {
       "product": "Debt collection",
@@ -283,8 +283,8 @@
       "product": "Money transfer, virtual currency, or money service",
       "yr": 2023,
       "complaints": 2907,
-      "prev_year": NaN,
-      "pct_change": NaN
+      "prev_year": null,
+      "pct_change": null
     },
     {
       "product": "Money transfer, virtual currency, or money service",
@@ -311,8 +311,8 @@
       "product": "Mortgage",
       "yr": 2023,
       "complaints": 3937,
-      "prev_year": NaN,
-      "pct_change": NaN
+      "prev_year": null,
+      "pct_change": null
     },
     {
       "product": "Mortgage",
