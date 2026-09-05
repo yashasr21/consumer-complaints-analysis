@@ -1,0 +1,158 @@
+"""
+Phase 5 and 6 - the classification model, and the recommendation that comes
+out of it.
+
+Two things this script does deliberately, both of which an interviewer will
+ask about:
+
+1. It splits by time, not at random. Train on the earlier period, test on the
+   later one. A random split lets the model see complaints from the same week
+   as the ones it is scored on, which is not how it would be deployed.
+
+2. It reports the majority-class baseline first. Most complaints are not
+   disputed, so a model that predicts "no dispute" every time already scores
+   high on accuracy. The baseline is printed before the model so the model's
+   accuracy is never read on its own.
+
+The threshold is picked from the precision-recall curve rather than left at
+0.5, and the lift over random review is the number the README opens with.
+
+Run:  python src/05_model.py
+"""
+
+import json
+import os
+import sys
+
+import numpy as np
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    average_precision_score,
+    classification_report,
+    precision_recall_curve,
+    roc_auc_score,
+)
+from sklearn.preprocessing import OneHotEncoder
+from scipy.sparse import hstack, csr_matrix
+
+FEATS = os.path.join("data", "processed", "features.csv")
+NARR = os.path.join("data", "processed", "complaints.csv")
+OUT = os.path.join("docs", "model_results.json")
+CURVE = os.path.join("docs", "pr_curve.csv")
+
+REVIEW_CAPACITY = 0.10  # the team can manually review 10% of arrivals
+
+
+def time_split(df, frac=0.75):
+    df = df.sort_values("date_received").reset_index(drop=True)
+    cut = int(len(df) * frac)
+    boundary = df.loc[cut, "date_received"]
+    return df.iloc[:cut], df.iloc[cut:], boundary
+
+
+def main():
+    if not os.path.exists(FEATS):
+        print(f"No file at {FEATS}. Run src/04_text_features.py first.")
+        sys.exit(1)
+
+    df = pd.read_csv(FEATS, parse_dates=["date_received"], low_memory=False)
+    narr = pd.read_csv(NARR, usecols=["complaint_id", "narrative"], low_memory=False)
+    df = df.merge(narr, on="complaint_id", how="left")
+    df["narrative"] = df["narrative"].fillna("")
+
+    train, test, boundary = time_split(df)
+    print(f"train {len(train):,} rows up to {boundary:%d %b %Y}")
+    print(f"test  {len(test):,} rows after that\n")
+
+    base_rate = test["disputed"].mean()
+    majority_acc = max(base_rate, 1 - base_rate)
+    print(f"Dispute rate in the test period : {base_rate * 100:.2f}%")
+    print(f"Majority-class baseline accuracy: {majority_acc * 100:.2f}%")
+    print("Any accuracy figure below is read against that number, not zero.\n")
+
+    hand = [c for c in df.columns if c not in
+            {"complaint_id", "date_received", "product", "company", "company_response",
+             "submitted_via", "disputed", "narrative"}]
+
+    # Hand-built numeric features.
+    Xtr_num = csr_matrix(train[hand].fillna(0).astype(float).values)
+    Xte_num = csr_matrix(test[hand].fillna(0).astype(float).values)
+
+    # Categorical context.
+    cats = ["product", "company_response", "submitted_via"]
+    enc = OneHotEncoder(handle_unknown="ignore", min_frequency=50)
+    Xtr_cat = enc.fit_transform(train[cats].astype(str))
+    Xte_cat = enc.transform(test[cats].astype(str))
+
+    # Text, fitted on train only so the test period stays unseen.
+    tfidf = TfidfVectorizer(max_features=20_000, ngram_range=(1, 2),
+                            min_df=5, stop_words="english", sublinear_tf=True)
+    Xtr_txt = tfidf.fit_transform(train["narrative"])
+    Xte_txt = tfidf.transform(test["narrative"])
+
+    Xtr = hstack([Xtr_num, Xtr_cat, Xtr_txt]).tocsr()
+    Xte = hstack([Xte_num, Xte_cat, Xte_txt]).tocsr()
+    ytr, yte = train["disputed"].values, test["disputed"].values
+
+    model = LogisticRegression(max_iter=2000, class_weight="balanced", C=0.5)
+    model.fit(Xtr, ytr)
+    prob = model.predict_proba(Xte)[:, 1]
+
+    auc = roc_auc_score(yte, prob)
+    ap = average_precision_score(yte, prob)
+    print(f"ROC AUC            : {auc:.3f}")
+    print(f"Average precision  : {ap:.3f}  (random = {base_rate:.3f})\n")
+
+    prec, rec, thr = precision_recall_curve(yte, prob)
+    pd.DataFrame({"precision": prec[:-1], "recall": rec[:-1], "threshold": thr}).to_csv(
+        CURVE, index=False
+    )
+
+    # Operating point: the score cut-off that selects the top 10% of arrivals,
+    # because that is what the review team can actually get through.
+    cutoff = float(np.quantile(prob, 1 - REVIEW_CAPACITY))
+    flagged = prob >= cutoff
+    caught = yte[flagged].sum() / yte.sum()
+    precision_at_cut = yte[flagged].mean()
+    lift = precision_at_cut / base_rate
+
+    print(f"Reviewing the top {REVIEW_CAPACITY:.0%} by score (threshold {cutoff:.3f}):")
+    print(f"  catches {caught * 100:.1f}% of all eventual disputes")
+    print(f"  {precision_at_cut * 100:.1f}% of what you review is a real dispute")
+    print(f"  that is {lift:.2f}x better than reviewing 10% at random\n")
+
+    print(classification_report(yte, (prob >= cutoff).astype(int),
+                               target_names=["not disputed", "disputed"], digits=3))
+
+    # Twenty highest-weighted text terms, to check against what you read by hand.
+    names = np.array(tfidf.get_feature_names_out())
+    text_coefs = model.coef_[0][-len(names):]
+    top = names[np.argsort(text_coefs)[-20:][::-1]]
+    print("Top 20 text terms pushing towards dispute:")
+    print(", ".join(top))
+
+    results = {
+        "train_rows": int(len(train)),
+        "test_rows": int(len(test)),
+        "split_date": boundary.strftime("%Y-%m-%d"),
+        "test_dispute_rate_pct": round(base_rate * 100, 2),
+        "majority_baseline_accuracy_pct": round(majority_acc * 100, 2),
+        "roc_auc": round(float(auc), 3),
+        "average_precision": round(float(ap), 3),
+        "review_capacity_pct": int(REVIEW_CAPACITY * 100),
+        "threshold": round(cutoff, 4),
+        "recall_at_capacity_pct": round(float(caught) * 100, 1),
+        "precision_at_capacity_pct": round(float(precision_at_cut) * 100, 1),
+        "lift_vs_random": round(float(lift), 2),
+        "top_terms": top.tolist(),
+    }
+    with open(OUT, "w", encoding="utf-8") as f:
+        json.dump(results, f, indent=2)
+    print(f"\nWritten to {OUT}")
+    print("\nPhase 6: the lift number above is your README opening sentence.")
+
+
+if __name__ == "__main__":
+    main()
