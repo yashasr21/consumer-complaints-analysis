@@ -5,24 +5,27 @@ dead ends, and it stays in the repo.
 
 ---
 
-**Before the first session — checking what the file actually contains**
+**Session 1 — the target variable does not exist**
 
-Planned to keep the most recent three years, as the build guide suggested, and
-predict whether a complaint was disputed. Those two do not go together. The
-*Consumer disputed?* field was discontinued part-way through the database, so the
-most recent years have no target variable in them at all. Narratives run the other
-way: they only start appearing partway through, once CFPB began publishing them
-with consumer consent.
+Downloaded the export and ran the profiler. It refused to read the file: two of the
+columns I was expecting, *Consumer disputed?* and *Consumer consent provided?*, are
+not in the export any more. The dispute field was the whole point of the project.
 
-So the usable rows are the overlap between "dispute outcome still recorded" and
-"narrative published", which is a much narrower window than three years of recent
-data. `src/02_filter.py` finds the window from the file rather than hard-coding
-dates, so it will still be right if CFPB changes what it publishes again.
+Options I weighed:
+- Find an archived older copy of the file that still has the column. Would work, but
+  it means analysing data that is years stale and cannot be refreshed.
+- Switch to *Timely response?*. Exists everywhere, but it is about company operations,
+  not about the complaint, and it is very heavily imbalanced.
+- Switch to *Closed with monetary relief*, from Company response to consumer. Present
+  for every year, and it is the outcome the dispute question was standing in for —
+  which complaints end up costing money.
 
-Considered switching the target to something that exists across all years —
-*closed with monetary relief*, or *timely response = No* — which would let the
-model use the full file. Kept dispute as the target because it is the outcome the
-question is actually about. Worth mentioning as the alternative if asked.
+Went with monetary relief. Side effect: the target is no longer tied to a retired
+field, so the most recent three years are usable, which is what I wanted originally.
+
+One trap this created. *Company response to consumer* is where the label comes from,
+so it cannot also be a feature. Took it out of the model inputs. If I had left it in,
+the model would have scored beautifully and learned nothing.
 
 ---
 

@@ -1,0 +1,65 @@
+CFPB Consumer Complaint Database - profile
+source file: data\raw\complaints.csv  (9.28 GB on disk)
+rows: 17,571,890
+columns: 16
+
+Missing values by column
+column                             missing   % missing
+date_received                            0        0.0%
+product                                  0        0.0%
+sub_product                        235,275        1.3%
+issue                                    6        0.0%
+sub_issue                          932,742        5.3%
+narrative                       13,723,925       78.1%
+company_public_response          7,940,572       45.2%
+company                                  0        0.0%
+state                               62,611        0.4%
+zip_code                             2,358        0.0%
+tags                            16,769,865       95.4%
+submitted_via                            0        0.0%
+date_sent_to_company                     0        0.0%
+company_response                        21        0.0%
+timely_response                          0        0.0%
+complaint_id                             0        0.0%
+
+Rows per year, with the target and the text the model needs
+year        complaints   monetary relief   relief %    narrative
+2011             2,536                 2       0.1%            0
+2012            72,368             6,576       9.1%            0
+2013           108,214             8,919       8.2%            0
+2014           152,909             9,345       6.1%            0
+2015           168,273            10,474       6.2%       54,723
+2016           191,292            11,972       6.3%       77,766
+2017           242,745            11,749       4.8%      115,311
+2018           257,131            11,914       4.6%      118,393
+2019           277,240            11,390       4.1%      124,843
+2020           444,213            12,929       2.9%      174,297
+2021           495,939            14,172       2.9%      203,570
+2022           800,245            16,852       2.1%      337,273
+2023         1,292,049            20,355       1.6%      487,410
+2024         2,734,269            23,745       0.9%      814,385
+2025         5,442,964            26,125       0.5%    1,222,049
+2026         4,889,503            21,080       0.4%      117,945
+
+Products by volume
+  12,026,541  Credit reporting or other personal consumer reports
+   2,163,770  Credit reporting, credit repair services, or other personal consumer reports
+   1,186,230  Debt collection
+     459,308  Mortgage
+     393,060  Checking or savings account
+     340,627  Credit card
+     206,356  Credit card or prepaid card
+     190,009  Money transfer, virtual currency, or money service
+     140,426  Credit reporting
+     132,891  Student loan
+     102,264  Vehicle loan or lease
+      86,198  Bank account or service
+      37,065  Payday loan, title loan, personal loan, or advance loan
+      31,559  Consumer Loan
+      30,614  Payday loan, title loan, or personal loan
+      22,912  Prepaid card
+      10,104  Debt or credit management
+       5,528  Payday loan
+       5,354  Money transfers
+       1,056  Other financial service
+          18  Virtual currency

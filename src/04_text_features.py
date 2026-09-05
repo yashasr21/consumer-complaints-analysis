@@ -27,8 +27,16 @@ SRC = os.path.join("data", "processed", "complaints.csv")
 OUT = os.path.join("data", "processed", "features.csv")
 REPORT = os.path.join("docs", "feature_rates.csv")
 
+# The three-year window holds well over a million narratives. Loading them all
+# at once needs several GB of memory, and a logistic regression on that many
+# rows takes long enough that you stop iterating. A random sample of this size
+# is plenty for the effect sizes involved, and it is a sample, not a filter -
+# the SQL phase still runs against every row. Raise it if your machine copes.
+MAX_ROWS = 400_000
+SEED = 7
+
 REDACTION = re.compile(r"\bX{2,}(?:/X{2,})*\b")
-MONEY = re.compile(r"(\$\s?[\d,]+(?:\.\d{2})?|\b\d[\d,]*\.\d{2}\s?(?:dollars|USD)\b)", re.I)
+MONEY = re.compile(r"(?:\$\s?[\d,]+(?:\.\d{2})?|\b\d[\d,]*\.\d{2}\s?(?:dollars|USD)\b)", re.I)
 CAPS_WORD = re.compile(r"\b[A-Z]{3,}\b")
 
 # Words worth flagging, grouped so the README can explain why each is here.
@@ -40,6 +48,7 @@ FLAGS = {
     "says_still": r"\b(still (?:no|not|have|has|hasn|haven|waiting)|to this day|as of today)\b",
     "mentions_regulator": r"\b(cfpb|attorney general|ftc|regulator|consumer protection)\b",
     "mentions_hardship": r"\b(hardship|unemployed|disabled|foreclosure|evict|bankrupt)\b",
+    "cites_statute": r"(\b\d{1,2}\s?U\.?S\.?C\.?\s?\d|\bFCRA\b|\bFDCPA\b|\bRESPA\b|\bsection\s+\d{3}\b)",
 }
 
 
@@ -69,15 +78,15 @@ def build(df):
 
 
 def rate_table(df, feats):
-    """Dispute rate when each binary feature is present versus absent."""
+    """Relief rate when each binary feature is present versus absent."""
     binary = [c for c in feats.columns if set(feats[c].unique()) == {0, 1}]
     if not binary:
         print("No flag fired on any narrative. Check the FLAGS patterns.")
     rows = []
-    base = df["disputed"].mean()
+    base = df["monetary_relief"].mean()
     for c in binary:
-        present = df.loc[feats[c] == 1, "disputed"]
-        absent = df.loc[feats[c] == 0, "disputed"]
+        present = df.loc[feats[c] == 1, "monetary_relief"]
+        absent = df.loc[feats[c] == 0, "monetary_relief"]
         rows.append(
             {
                 "feature": c,
@@ -90,26 +99,64 @@ def rate_table(df, feats):
             }
         )
     table = pd.DataFrame(rows).sort_values("lift_pct_points", ascending=False)
-    print(f"\nBaseline dispute rate: {base * 100:.2f}%\n")
+    print(f"\nBaseline monetary-relief rate: {base * 100:.2f}%\n")
     print(table.to_string(index=False))
     return table
 
 
+def load(path):
+    """Read the filtered file, sampling down if it is larger than MAX_ROWS."""
+    total = sum(len(c) for c in pd.read_csv(path, usecols=["complaint_id"], chunksize=200_000))
+    if total <= MAX_ROWS:
+        print(f"{total:,} rows, reading all of them.")
+        return pd.read_csv(path, low_memory=False)
+
+    frac = MAX_ROWS / total
+    print(f"{total:,} rows. Sampling {frac:.1%} of them to keep memory sane.")
+    parts = []
+    for chunk in pd.read_csv(path, chunksize=200_000, low_memory=False):
+        parts.append(chunk.sample(frac=frac, random_state=SEED))
+    df = pd.concat(parts, ignore_index=True)
+    print(f"Working with {len(df):,} rows.")
+    print("Record this in the README - it is a sampling decision, not a filter.\n")
+    return df
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--sample", type=int, default=0, help="print N narratives and stop")
+    ap.add_argument("--sample", type=int, default=0, help="print N random narratives and stop")
+    ap.add_argument("--compare", type=int, default=0,
+                    help="print N narratives, half of them relief cases, and stop")
     args = ap.parse_args()
 
     if not os.path.exists(SRC):
         print(f"No file at {SRC}. Run src/02_filter.py first.")
         sys.exit(1)
 
-    df = pd.read_csv(SRC, low_memory=False)
+    df = load(SRC)
+
+    if args.compare:
+        # A random sample at a 1.8% base rate is almost all non-relief cases,
+        # so reading one tells you nothing about what separates the two. This
+        # takes half from each class and interleaves them, labelled, so you can
+        # actually see the contrast.
+        half = max(1, args.compare // 2)
+        yes = df[df["monetary_relief"] == 1].sample(
+            min(half, int((df["monetary_relief"] == 1).sum())), random_state=SEED)
+        no = df[df["monetary_relief"] == 0].sample(min(half, len(df)), random_state=SEED)
+        print(f"Showing {len(yes)} that got monetary relief and {len(no)} that did not.")
+        print("They are interleaved. Cover the label and guess before you look.\n")
+        pairs = [r for pair in zip(yes.itertuples(), no.itertuples()) for r in pair]
+        for i, row in enumerate(pairs, start=1):
+            print(f"\n--- {i}  [{row.product}] relief={row.monetary_relief} ---")
+            print(str(row.narrative)[:900])
+        print("\nWrite what you noticed into notes.md before running this again.")
+        return
 
     if args.sample:
-        sample = df.sample(min(args.sample, len(df)), random_state=7)
+        sample = df.sample(min(args.sample, len(df)), random_state=SEED)
         for i, row in enumerate(sample.itertuples(), start=1):
-            print(f"\n--- {i}  [{row.product}] disputed={row.disputed} ---")
+            print(f"\n--- {i}  [{row.product}] relief={row.monetary_relief} ---")
             print(str(row.narrative)[:900])
         print("\nWrite what you noticed into notes.md before running this again.")
         return
@@ -117,9 +164,11 @@ def main():
     feats = build(df)
     table = rate_table(df, feats)
 
-    combined = pd.concat([df[["complaint_id", "date_received", "product", "company",
-                              "company_response", "submitted_via", "days_to_company",
-                              "disputed"]], feats], axis=1)
+    # company_response is deliberately left out: the target is derived from it,
+    # so feeding it to the model would be leakage.
+    combined = pd.concat([df[["complaint_id", "date_received", "product", "issue",
+                              "company", "state", "submitted_via", "days_to_company",
+                              "monetary_relief"]], feats], axis=1)
     combined.to_csv(OUT, index=False)
     os.makedirs("docs", exist_ok=True)
     table.to_csv(REPORT, index=False)

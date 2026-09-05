@@ -29,12 +29,10 @@ RENAME = {
     "State": "state",
     "ZIP code": "zip_code",
     "Tags": "tags",
-    "Consumer consent provided?": "consumer_consent",
     "Submitted via": "submitted_via",
     "Date sent to company": "date_sent_to_company",
     "Company response to consumer": "company_response",
     "Timely response?": "timely_response",
-    "Consumer disputed?": "consumer_disputed",
     "Complaint ID": "complaint_id",
 }
 
@@ -67,7 +65,7 @@ def main():
     rows = 0
     nulls = None
     per_year = {}
-    disputed_per_year = {}
+    relief_per_year = {}
     narrative_per_year = {}
     products = {}
 
@@ -90,10 +88,10 @@ def main():
         for y, c in year.value_counts().items():
             per_year[y] = per_year.get(y, 0) + int(c)
 
-        # How many rows in each year actually carry a dispute flag, and a narrative.
-        has_disp = chunk["consumer_disputed"].notna()
-        for y, c in year[has_disp].value_counts().items():
-            disputed_per_year[y] = disputed_per_year.get(y, 0) + int(c)
+        # How many rows in each year ended in monetary relief, and carry a narrative.
+        relief = chunk["company_response"].fillna("").str.strip() == "Closed with monetary relief"
+        for y, c in year[relief].value_counts().items():
+            relief_per_year[y] = relief_per_year.get(y, 0) + int(c)
 
         has_narr = chunk["narrative"].notna()
         for y, c in year[has_narr].value_counts().items():
@@ -119,13 +117,12 @@ def main():
         add(f"{col:<28}{m:>14,}{m / rows * 100:>11.1f}%")
     add("")
 
-    add("Rows per year, and how many carry the two fields the model needs")
-    add(f"{'year':<8}{'complaints':>14}{'dispute flag':>16}{'narrative':>14}{'both':>10}")
+    add("Rows per year, with the target and the text the model needs")
+    add(f"{'year':<8}{'complaints':>14}{'monetary relief':>18}{'relief %':>11}{'narrative':>13}")
     for y in sorted(per_year):
-        d = disputed_per_year.get(y, 0)
+        r = relief_per_year.get(y, 0)
         nn = narrative_per_year.get(y, 0)
-        both = "yes" if d and nn else "no"
-        add(f"{int(y):<8}{per_year[y]:>14,}{d:>16,}{nn:>14,}{both:>10}")
+        add(f"{int(y):<8}{per_year[y]:>14,}{r:>18,}{r / per_year[y] * 100:>10.1f}%{nn:>13,}")
     add("")
 
     add("Products by volume")

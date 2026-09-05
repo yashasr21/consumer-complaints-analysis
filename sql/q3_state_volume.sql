@@ -9,7 +9,7 @@
 SELECT state,
        COUNT(*)                                                   AS complaints,
        ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM complaints), 2) AS pct_of_total,
-       ROUND(100.0 * SUM(disputed) / COUNT(*), 1)                 AS dispute_rate_pct
+       ROUND(100.0 * SUM(monetary_relief) / COUNT(*), 1)                 AS relief_rate_pct
        -- , ROUND(1000000.0 * COUNT(*) / p.population, 1) AS per_million
 FROM complaints c
 -- LEFT JOIN state_population p ON p.state = c.state

@@ -1,0 +1,11 @@
+feature,n_present,rate_present_pct,rate_absent_pct,lift_pct_points
+says_still,8219,7.13,1.67,5.46
+has_dollar_amount,76752,5.9,0.8,5.1
+says_repeatedly,18507,4.81,1.63,3.18
+mentions_hardship,6988,3.45,1.75,1.7
+mentions_fraud,110841,1.95,1.72,0.23
+mentions_regulator,62930,1.19,1.89,-0.7
+shouting,103230,1.14,2.0,-0.86
+mentions_attorney,42179,0.63,1.92,-1.29
+cites_statute,147978,0.08,2.78,-2.7
+mentions_credit_score,184874,0.24,3.11,-2.87

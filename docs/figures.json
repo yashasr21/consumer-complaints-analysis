@@ -1,1 +1,101 @@
-{"generated": null}
+{
+  "generated": "06 September 2026",
+  "rows_analysed": 2315601,
+  "relief_rate_pct": 1.8,
+  "window_from": "Sep 2023",
+  "window_to": "Aug 2026",
+  "model": {
+    "train_rows": 299997,
+    "test_rows": 100000,
+    "split_date": "2025-07-17",
+    "test_relief_rate_pct": 2.59,
+    "majority_baseline_accuracy_pct": 97.41,
+    "roc_auc": 0.953,
+    "average_precision": 0.328,
+    "review_capacity_pct": 10,
+    "threshold": 0.748,
+    "recall_at_capacity_pct": 80.3,
+    "precision_at_capacity_pct": 20.8,
+    "lift_vs_random": 8.03,
+    "top_terms": [
+      "comenity",
+      "coinbase",
+      "credit acceptance",
+      "fee",
+      "america",
+      "bank america",
+      "acceptance",
+      "penfed",
+      "atm",
+      "refund",
+      "citibank",
+      "macys",
+      "fees",
+      "bank",
+      "escrow",
+      "escalated",
+      "citi",
+      "amex",
+      "manage",
+      "orders"
+    ]
+  },
+  "feature_lift": [
+    {
+      "feature": "says_still",
+      "n_present": 8219,
+      "rate_present_pct": 7.13,
+      "rate_absent_pct": 1.67,
+      "lift_pct_points": 5.46
+    },
+    {
+      "feature": "has_dollar_amount",
+      "n_present": 76752,
+      "rate_present_pct": 5.9,
+      "rate_absent_pct": 0.8,
+      "lift_pct_points": 5.1
+    },
+    {
+      "feature": "says_repeatedly",
+      "n_present": 18507,
+      "rate_present_pct": 4.81,
+      "rate_absent_pct": 1.63,
+      "lift_pct_points": 3.18
+    },
+    {
+      "feature": "mentions_hardship",
+      "n_present": 6988,
+      "rate_present_pct": 3.45,
+      "rate_absent_pct": 1.75,
+      "lift_pct_points": 1.7
+    },
+    {
+      "feature": "mentions_fraud",
+      "n_present": 110841,
+      "rate_present_pct": 1.95,
+      "rate_absent_pct": 1.72,
+      "lift_pct_points": 0.23
+    },
+    {
+      "feature": "mentions_regulator",
+      "n_present": 62930,
+      "rate_present_pct": 1.19,
+      "rate_absent_pct": 1.89,
+      "lift_pct_points": -0.7
+    },
+    {
+      "feature": "shouting",
+      "n_present": 103230,
+      "rate_present_pct": 1.14,
+      "rate_absent_pct": 2.0,
+      "lift_pct_points": -0.86
+    },
+    {
+      "feature": "mentions_attorney",
+      "n_present": 42179,
+      "rate_present_pct": 0.63,
+      "rate_absent_pct": 1.92,
+      "lift_pct_points": -1.29
+    }
+  ]
+}

@@ -37,10 +37,10 @@ def main():
 
     processed = os.path.join("data", "processed", "complaints.csv")
     if os.path.exists(processed):
-        df = pd.read_csv(processed, usecols=["date_received", "disputed"],
+        df = pd.read_csv(processed, usecols=["date_received", "monetary_relief"],
                          parse_dates=["date_received"], low_memory=False)
         fig["rows_analysed"] = int(len(df))
-        fig["dispute_rate_pct"] = round(float(df["disputed"].mean()) * 100, 1)
+        fig["relief_rate_pct"] = round(float(df["monetary_relief"].mean()) * 100, 1)
         fig["window_from"] = df["date_received"].min().strftime("%b %Y")
         fig["window_to"] = df["date_received"].max().strftime("%b %Y")
 
@@ -48,15 +48,15 @@ def main():
     if model:
         fig["model"] = model
 
-    q2 = read_csv("q2_top_companies_dispute_rate")
+    q2 = read_csv("q2_top_companies_relief_rate")
     if q2 is not None:
         fig["top_companies"] = q2.head(8).to_dict("records")
 
-    q4 = read_csv("q4_dispute_by_response")
+    q4 = read_csv("q4_relief_by_product")
     if q4 is not None:
-        fig["by_response"] = q4.to_dict("records")
+        fig["by_product"] = q4.to_dict("records")
 
-    q5 = read_csv("q5_dispute_by_channel")
+    q5 = read_csv("q5_relief_by_channel")
     if q5 is not None:
         fig["by_channel"] = q5.to_dict("records")
 
@@ -74,9 +74,9 @@ def main():
     with open(OUT, "w", encoding="utf-8") as f:
         json.dump(fig, f, indent=2)
 
-    have = [k for k in ("rows_analysed", "model", "top_companies", "by_response",
+    have = [k for k in ("rows_analysed", "model", "top_companies", "by_product",
                         "by_channel", "volume_by_year", "feature_lift") if k in fig]
-    missing = [k for k in ("rows_analysed", "model", "top_companies", "by_response",
+    missing = [k for k in ("rows_analysed", "model", "top_companies", "by_product",
                            "by_channel", "volume_by_year", "feature_lift") if k not in fig]
     print(f"Written {OUT}")
     print("  present:", ", ".join(have) or "nothing")

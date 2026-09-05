@@ -31,7 +31,7 @@ def load():
         print(f"  loaded {total:,}", flush=True)
 
     cur = con.cursor()
-    for col in ("product", "company", "date_received", "disputed", "company_response"):
+    for col in ("product", "company", "date_received", "monetary_relief"):
         cur.execute(f"CREATE INDEX IF NOT EXISTS idx_{col} ON complaints({col})")
     con.commit()
     print(f"\n{total:,} rows in {DB}")

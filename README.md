@@ -1,4 +1,4 @@
-# What makes a consumer complaint escalate
+# What makes a complaint cost money
 
 Dashboard: https://yashasr21.github.io/consumer-complaints-analysis/
 
@@ -9,13 +9,15 @@ is not on your screen from a script in this repository, it does not go in.
 
 ## 1. The question
 
-A financial company receives thousands of complaints a month. Most close quietly. A
-minority turn into disputes, and a dispute costs far more to resolve than a complaint
-that closes first time. If the risky ones could be spotted from the text that arrives
-on day one, a review team could look at those first.
+A financial company receives thousands of complaints a month. Most are closed with an
+explanation and cost nothing but staff time. A minority end with the company paying the
+person something, and those are the expensive ones. If they could be spotted from the
+text that arrives on day one, a review team could look at those first.
 
 The question this repository answers: **can the words in a complaint, on the day it
-arrives, tell you whether the person will end up disputing the outcome?**
+arrives, tell you whether it will end in monetary relief?**
+
+This is not the question the project started with. See below.
 
 ## 2. The data
 
@@ -24,24 +26,28 @@ Provenance and download date are recorded in `data/raw/SOURCE.md`.
 
 Downloaded ____________, ______________ rows in the full file.
 
-**The constraint that shaped this project.** CFPB stopped collecting the
-*Consumer disputed?* field part-way through the life of the database, and complaint
-narratives were only published from partway through as well. Rows carrying both a
-narrative and a dispute outcome sit in the overlap between those two changes.
+**The change of target, and why.** This project set out to predict whether a consumer
+*disputed* the company's response. `src/01_profile.py` checks the file header before
+reading anything, and it stopped: CFPB no longer publishes *Consumer disputed?* or
+*Consumer consent provided?* in the export. The original target does not exist in the
+data any more.
 
-`src/02_filter.py` finds that overlap from the data rather than assuming dates:
+Rather than force it, the target moved to something the file does still carry:
+**Company response to consumer**, and specifically whether it reads *Closed with
+monetary relief*. That is the outcome the original question was a proxy for anyway —
+which complaints turn expensive — and it is recorded for every year, so the recent
+three-year window is usable.
+
+`src/02_filter.py` reports its own filtering:
 
 | | |
 |---|---|
 | Rows read | ____________ |
-| Dropped, no dispute outcome recorded | ____________ |
+| Dropped, older than the three-year window | ____________ |
 | Dropped, no narrative published | ____________ |
+| Dropped, no outcome recorded yet | ____________ |
 | Rows kept | ____________ (____% of the file) |
-| Window | ____________ to ____________ |
-
-That is a large drop and it is the first thing worth being straight about. The model
-below is trained on the years where the outcome was still recorded. It would need
-re-validating before being pointed at complaints arriving today.
+| Closed with monetary relief | ______% |
 
 ## 3. What I did
 
@@ -66,11 +72,11 @@ Eight SQL queries live in `sql/`, one per question. One-sentence answers are in
 
 Write one line per finding, each traceable to a query.
 
-- Dispute rate across the whole window: ______%
-- Dispute rate after *closed with monetary relief*: ______% against ______% after
-  *closed with explanation*. ______________________________________________
+- Relief rate across the whole window: ______%
+- The product with the highest relief rate was ____________ at ______%, against
+  ______% for the highest-volume product. ________________________________
 - The channel a complaint arrives on ____________________________________
-- Volume and dispute rate rank companies differently: ____________________
+- Volume and relief rate rank companies differently: ____________________
 - The hand-built text flag with the largest lift was ____________, worth
   ______ percentage points.
 
@@ -86,7 +92,7 @@ tested on the later part, because that is how it would actually be used.
 | ROC AUC | ______ |
 | Average precision | ______ against ______ at random |
 | Threshold | ______, chosen to flag the top 10% by score |
-| Disputes caught in that top 10% | ______% |
+| Relief cases caught in that top 10% | ______% |
 | Precision at that threshold | ______% |
 
 **The recommendation, in one sentence:**
@@ -97,16 +103,16 @@ can re-derive on paper.
 
 ## 6. What this does not tell you
 
-- The dispute field was retired, so nothing here is validated on recent complaints.
+- Monetary relief is a company's decision to pay, not a measure of who was wronged. A
+  firm that settles readily looks worse here than one that refuses everything.
 - Complaints that reach CFPB are not a random sample of unhappy customers. People who
   escalate to a federal regulator have already self-selected.
-- A recorded dispute is an action someone took, not a measure of who was wronged.
-  Someone who gave up and never disputed does not appear as a problem in this data.
-- Narratives are only published when the consumer consented, so the text-based part of
-  this analysis covers a subset of a subset.
+- Narratives are only published when the consumer consented, so this covers a subset.
+  Whatever makes someone consent to publication may also relate to the outcome.
+- The company's own response field is the source of the label, so it is deliberately
+  kept out of the features. Leaving it in would have leaked the answer into the model.
 - ______________________________________________ *(add your own — you will find one)*
 
 ---
 
-Built by Yashas R · [github.com/yashasr21](https://github.com/yashasr21) ·
-[linkedin.com/in/yashas-r-637870433](https://linkedin.com/in/yashas-r-637870433)
+Built by Yashas R · [github.com/yashasr21](https://github.com/yashasr21)

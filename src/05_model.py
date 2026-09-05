@@ -9,8 +9,8 @@ ask about:
    later one. A random split lets the model see complaints from the same week
    as the ones it is scored on, which is not how it would be deployed.
 
-2. It reports the majority-class baseline first. Most complaints are not
-   disputed, so a model that predicts "no dispute" every time already scores
+2. It reports the majority-class baseline first. Most complaints do not
+   end in monetary relief, so a model that predicts "no relief" every time already scores
    high on accuracy. The baseline is printed before the model so the model's
    accuracy is never read on its own.
 
@@ -58,7 +58,15 @@ def main():
         sys.exit(1)
 
     df = pd.read_csv(FEATS, parse_dates=["date_received"], low_memory=False)
-    narr = pd.read_csv(NARR, usecols=["complaint_id", "narrative"], low_memory=False)
+
+    # Pull narratives only for the rows we kept, in chunks, so the full file
+    # never sits in memory at once.
+    wanted = set(df["complaint_id"])
+    parts = []
+    for chunk in pd.read_csv(NARR, usecols=["complaint_id", "narrative"],
+                             chunksize=200_000, low_memory=False):
+        parts.append(chunk[chunk["complaint_id"].isin(wanted)])
+    narr = pd.concat(parts, ignore_index=True)
     df = df.merge(narr, on="complaint_id", how="left")
     df["narrative"] = df["narrative"].fillna("")
 
@@ -66,37 +74,38 @@ def main():
     print(f"train {len(train):,} rows up to {boundary:%d %b %Y}")
     print(f"test  {len(test):,} rows after that\n")
 
-    base_rate = test["disputed"].mean()
+    base_rate = test["monetary_relief"].mean()
     majority_acc = max(base_rate, 1 - base_rate)
-    print(f"Dispute rate in the test period : {base_rate * 100:.2f}%")
+    print(f"Relief rate in the test period  : {base_rate * 100:.2f}%")
     print(f"Majority-class baseline accuracy: {majority_acc * 100:.2f}%")
     print("Any accuracy figure below is read against that number, not zero.\n")
 
     hand = [c for c in df.columns if c not in
-            {"complaint_id", "date_received", "product", "company", "company_response",
-             "submitted_via", "disputed", "narrative"}]
+            {"complaint_id", "date_received", "product", "issue", "company", "state",
+             "submitted_via", "monetary_relief", "narrative"}]
 
     # Hand-built numeric features.
     Xtr_num = csr_matrix(train[hand].fillna(0).astype(float).values)
     Xte_num = csr_matrix(test[hand].fillna(0).astype(float).values)
 
     # Categorical context.
-    cats = ["product", "company_response", "submitted_via"]
+    cats = ["product", "issue", "submitted_via", "state"]
     enc = OneHotEncoder(handle_unknown="ignore", min_frequency=50)
     Xtr_cat = enc.fit_transform(train[cats].astype(str))
     Xte_cat = enc.transform(test[cats].astype(str))
 
     # Text, fitted on train only so the test period stays unseen.
-    tfidf = TfidfVectorizer(max_features=20_000, ngram_range=(1, 2),
+    tfidf = TfidfVectorizer(max_features=15_000, ngram_range=(1, 2),
                             min_df=5, stop_words="english", sublinear_tf=True)
     Xtr_txt = tfidf.fit_transform(train["narrative"])
     Xte_txt = tfidf.transform(test["narrative"])
 
     Xtr = hstack([Xtr_num, Xtr_cat, Xtr_txt]).tocsr()
     Xte = hstack([Xte_num, Xte_cat, Xte_txt]).tocsr()
-    ytr, yte = train["disputed"].values, test["disputed"].values
+    ytr, yte = train["monetary_relief"].values, test["monetary_relief"].values
 
-    model = LogisticRegression(max_iter=2000, class_weight="balanced", C=0.5)
+    model = LogisticRegression(max_iter=1000, class_weight="balanced", C=0.5,
+                               solver="liblinear")
     model.fit(Xtr, ytr)
     prob = model.predict_proba(Xte)[:, 1]
 
@@ -119,25 +128,25 @@ def main():
     lift = precision_at_cut / base_rate
 
     print(f"Reviewing the top {REVIEW_CAPACITY:.0%} by score (threshold {cutoff:.3f}):")
-    print(f"  catches {caught * 100:.1f}% of all eventual disputes")
-    print(f"  {precision_at_cut * 100:.1f}% of what you review is a real dispute")
+    print(f"  catches {caught * 100:.1f}% of all relief cases")
+    print(f"  {precision_at_cut * 100:.1f}% of what you review ends in relief")
     print(f"  that is {lift:.2f}x better than reviewing 10% at random\n")
 
     print(classification_report(yte, (prob >= cutoff).astype(int),
-                               target_names=["not disputed", "disputed"], digits=3))
+                               target_names=["no relief", "monetary relief"], digits=3))
 
     # Twenty highest-weighted text terms, to check against what you read by hand.
     names = np.array(tfidf.get_feature_names_out())
     text_coefs = model.coef_[0][-len(names):]
     top = names[np.argsort(text_coefs)[-20:][::-1]]
-    print("Top 20 text terms pushing towards dispute:")
+    print("Top 20 text terms pushing towards monetary relief:")
     print(", ".join(top))
 
     results = {
         "train_rows": int(len(train)),
         "test_rows": int(len(test)),
         "split_date": boundary.strftime("%Y-%m-%d"),
-        "test_dispute_rate_pct": round(base_rate * 100, 2),
+        "test_relief_rate_pct": round(base_rate * 100, 2),
         "majority_baseline_accuracy_pct": round(majority_acc * 100, 2),
         "roc_auc": round(float(auc), 3),
         "average_precision": round(float(ap), 3),
