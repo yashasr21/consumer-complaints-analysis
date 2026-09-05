@@ -40,6 +40,302 @@
       "orders"
     ]
   },
+  "top_companies": [
+    {
+      "company": "EQUIFAX, INC.",
+      "complaints": 555474,
+      "relief_cases": 3,
+      "relief_rate_pct": 0.0
+    },
+    {
+      "company": "TRANSUNION INTERMEDIATE HOLDINGS, INC.",
+      "complaints": 537257,
+      "relief_cases": 4,
+      "relief_rate_pct": 0.0
+    },
+    {
+      "company": "Experian Information Solutions Inc.",
+      "complaints": 510422,
+      "relief_cases": 131,
+      "relief_rate_pct": 0.0
+    },
+    {
+      "company": "Block, Inc.",
+      "complaints": 45056,
+      "relief_cases": 57,
+      "relief_rate_pct": 0.1
+    },
+    {
+      "company": "CAPITAL ONE FINANCIAL CORPORATION",
+      "complaints": 34542,
+      "relief_cases": 2023,
+      "relief_rate_pct": 5.9
+    },
+    {
+      "company": "JPMORGAN CHASE & CO.",
+      "complaints": 29086,
+      "relief_cases": 2289,
+      "relief_rate_pct": 7.9
+    },
+    {
+      "company": "WELLS FARGO & COMPANY",
+      "complaints": 23230,
+      "relief_cases": 2385,
+      "relief_rate_pct": 10.3
+    },
+    {
+      "company": "BANK OF AMERICA, NATIONAL ASSOCIATION",
+      "complaints": 22529,
+      "relief_cases": 6790,
+      "relief_rate_pct": 30.1
+    }
+  ],
+  "by_product": [
+    {
+      "product": "Credit reporting or other personal consumer reports",
+      "complaints": 1661995,
+      "relief_cases": 1038,
+      "relief_rate_pct": 0.1
+    },
+    {
+      "product": "Debt collection",
+      "complaints": 221546,
+      "relief_cases": 615,
+      "relief_rate_pct": 0.3
+    },
+    {
+      "product": "Checking or savings account",
+      "complaints": 110183,
+      "relief_cases": 13922,
+      "relief_rate_pct": 12.6
+    },
+    {
+      "product": "Credit card",
+      "complaints": 108718,
+      "relief_cases": 17841,
+      "relief_rate_pct": 16.4
+    },
+    {
+      "product": "Money transfer, virtual currency, or money service",
+      "complaints": 87448,
+      "relief_cases": 3295,
+      "relief_rate_pct": 3.8
+    },
+    {
+      "product": "Mortgage",
+      "complaints": 37718,
+      "relief_cases": 739,
+      "relief_rate_pct": 2.0
+    },
+    {
+      "product": "Vehicle loan or lease",
+      "complaints": 27161,
+      "relief_cases": 711,
+      "relief_rate_pct": 2.6
+    },
+    {
+      "product": "Student loan",
+      "complaints": 26508,
+      "relief_cases": 160,
+      "relief_rate_pct": 0.6
+    },
+    {
+      "product": "Payday loan, title loan, personal loan, or advance loan",
+      "complaints": 18579,
+      "relief_cases": 650,
+      "relief_rate_pct": 3.5
+    },
+    {
+      "product": "Prepaid card",
+      "complaints": 10199,
+      "relief_cases": 2017,
+      "relief_rate_pct": 19.8
+    },
+    {
+      "product": "Debt or credit management",
+      "complaints": 5546,
+      "relief_cases": 201,
+      "relief_rate_pct": 3.6
+    }
+  ],
+  "by_channel": [
+    {
+      "submitted_via": "Web",
+      "complaints": 2315601,
+      "relief_rate_pct": 1.8,
+      "avg_words": 173.0
+    }
+  ],
+  "volume_by_year": [
+    {
+      "product": "Checking or savings account",
+      "yr": 2023,
+      "complaints": 8488,
+      "prev_year": NaN,
+      "pct_change": NaN
+    },
+    {
+      "product": "Checking or savings account",
+      "yr": 2024,
+      "complaints": 29485,
+      "prev_year": 8488.0,
+      "pct_change": 247.4
+    },
+    {
+      "product": "Checking or savings account",
+      "yr": 2025,
+      "complaints": 51448,
+      "prev_year": 29485.0,
+      "pct_change": 74.5
+    },
+    {
+      "product": "Checking or savings account",
+      "yr": 2026,
+      "complaints": 20762,
+      "prev_year": 51448.0,
+      "pct_change": -59.6
+    },
+    {
+      "product": "Credit card",
+      "yr": 2023,
+      "complaints": 11847,
+      "prev_year": NaN,
+      "pct_change": NaN
+    },
+    {
+      "product": "Credit card",
+      "yr": 2024,
+      "complaints": 35451,
+      "prev_year": 11847.0,
+      "pct_change": 199.2
+    },
+    {
+      "product": "Credit card",
+      "yr": 2025,
+      "complaints": 41515,
+      "prev_year": 35451.0,
+      "pct_change": 17.1
+    },
+    {
+      "product": "Credit card",
+      "yr": 2026,
+      "complaints": 19905,
+      "prev_year": 41515.0,
+      "pct_change": -52.1
+    },
+    {
+      "product": "Credit reporting or other personal consumer reports",
+      "yr": 2023,
+      "complaints": 113770,
+      "prev_year": NaN,
+      "pct_change": NaN
+    },
+    {
+      "product": "Credit reporting or other personal consumer reports",
+      "yr": 2024,
+      "complaints": 630664,
+      "prev_year": 113770.0,
+      "pct_change": 454.3
+    },
+    {
+      "product": "Credit reporting or other personal consumer reports",
+      "yr": 2025,
+      "complaints": 912743,
+      "prev_year": 630664.0,
+      "pct_change": 44.7
+    },
+    {
+      "product": "Credit reporting or other personal consumer reports",
+      "yr": 2026,
+      "complaints": 4818,
+      "prev_year": 912743.0,
+      "pct_change": -99.5
+    },
+    {
+      "product": "Debt collection",
+      "yr": 2023,
+      "complaints": 11497,
+      "prev_year": NaN,
+      "pct_change": NaN
+    },
+    {
+      "product": "Debt collection",
+      "yr": 2024,
+      "complaints": 70290,
+      "prev_year": 11497.0,
+      "pct_change": 511.4
+    },
+    {
+      "product": "Debt collection",
+      "yr": 2025,
+      "complaints": 100605,
+      "prev_year": 70290.0,
+      "pct_change": 43.1
+    },
+    {
+      "product": "Debt collection",
+      "yr": 2026,
+      "complaints": 39154,
+      "prev_year": 100605.0,
+      "pct_change": -61.1
+    },
+    {
+      "product": "Money transfer, virtual currency, or money service",
+      "yr": 2023,
+      "complaints": 2907,
+      "prev_year": NaN,
+      "pct_change": NaN
+    },
+    {
+      "product": "Money transfer, virtual currency, or money service",
+      "yr": 2024,
+      "complaints": 10239,
+      "prev_year": 2907.0,
+      "pct_change": 252.2
+    },
+    {
+      "product": "Money transfer, virtual currency, or money service",
+      "yr": 2025,
+      "complaints": 64861,
+      "prev_year": 10239.0,
+      "pct_change": 533.5
+    },
+    {
+      "product": "Money transfer, virtual currency, or money service",
+      "yr": 2026,
+      "complaints": 9441,
+      "prev_year": 64861.0,
+      "pct_change": -85.4
+    },
+    {
+      "product": "Mortgage",
+      "yr": 2023,
+      "complaints": 3937,
+      "prev_year": NaN,
+      "pct_change": NaN
+    },
+    {
+      "product": "Mortgage",
+      "yr": 2024,
+      "complaints": 12209,
+      "prev_year": 3937.0,
+      "pct_change": 210.1
+    },
+    {
+      "product": "Mortgage",
+      "yr": 2025,
+      "complaints": 14031,
+      "prev_year": 12209.0,
+      "pct_change": 14.9
+    },
+    {
+      "product": "Mortgage",
+      "yr": 2026,
+      "complaints": 7541,
+      "prev_year": 14031.0,
+      "pct_change": -46.3
+    }
+  ],
   "feature_lift": [
     {
       "feature": "says_still",

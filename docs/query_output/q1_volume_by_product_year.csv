@@ -1,0 +1,45 @@
+product,yr,complaints,prev_year,pct_change
+Checking or savings account,2023,8488,,
+Checking or savings account,2024,29485,8488.0,247.4
+Checking or savings account,2025,51448,29485.0,74.5
+Checking or savings account,2026,20762,51448.0,-59.6
+Credit card,2023,11847,,
+Credit card,2024,35451,11847.0,199.2
+Credit card,2025,41515,35451.0,17.1
+Credit card,2026,19905,41515.0,-52.1
+Credit reporting or other personal consumer reports,2023,113770,,
+Credit reporting or other personal consumer reports,2024,630664,113770.0,454.3
+Credit reporting or other personal consumer reports,2025,912743,630664.0,44.7
+Credit reporting or other personal consumer reports,2026,4818,912743.0,-99.5
+Debt collection,2023,11497,,
+Debt collection,2024,70290,11497.0,511.4
+Debt collection,2025,100605,70290.0,43.1
+Debt collection,2026,39154,100605.0,-61.1
+Debt or credit management,2023,280,,
+Debt or credit management,2024,1553,280.0,454.6
+Debt or credit management,2025,2644,1553.0,70.3
+Debt or credit management,2026,1069,2644.0,-59.6
+"Money transfer, virtual currency, or money service",2023,2907,,
+"Money transfer, virtual currency, or money service",2024,10239,2907.0,252.2
+"Money transfer, virtual currency, or money service",2025,64861,10239.0,533.5
+"Money transfer, virtual currency, or money service",2026,9441,64861.0,-85.4
+Mortgage,2023,3937,,
+Mortgage,2024,12209,3937.0,210.1
+Mortgage,2025,14031,12209.0,14.9
+Mortgage,2026,7541,14031.0,-46.3
+"Payday loan, title loan, personal loan, or advance loan",2023,1382,,
+"Payday loan, title loan, personal loan, or advance loan",2024,5211,1382.0,277.1
+"Payday loan, title loan, personal loan, or advance loan",2025,7805,5211.0,49.8
+"Payday loan, title loan, personal loan, or advance loan",2026,4181,7805.0,-46.4
+Prepaid card,2023,1276,,
+Prepaid card,2024,3699,1276.0,189.9
+Prepaid card,2025,3822,3699.0,3.3
+Prepaid card,2026,1402,3822.0,-63.3
+Student loan,2023,3796,,
+Student loan,2024,8025,3796.0,111.4
+Student loan,2025,10780,8025.0,34.3
+Student loan,2026,3907,10780.0,-63.8
+Vehicle loan or lease,2023,2169,,
+Vehicle loan or lease,2024,7552,2169.0,248.2
+Vehicle loan or lease,2025,11686,7552.0,54.7
+Vehicle loan or lease,2026,5754,11686.0,-50.8
