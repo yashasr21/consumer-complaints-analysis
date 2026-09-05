@@ -108,5 +108,4 @@ can re-derive on paper.
 
 ---
 
-Built by Yashas R · [github.com/yashasr21](https://github.com/yashasr21) ·
-[linkedin.com/in/yashas-r-637870433](https://linkedin.com/in/yashas-r-637870433)
+Built by Yashas R ·
