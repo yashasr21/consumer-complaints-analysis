@@ -2,7 +2,7 @@
 
 Dashboard: https://yashasr21.github.io/consumer-complaints-analysis/
 
-## 1. The question
+## 1\. The question
 
 A financial company receives thousands of complaints a month. Most are closed with an
 explanation and cost nothing but staff time. A minority end with the company paying the
@@ -14,7 +14,7 @@ arrives, tell you whether it will end in monetary relief?**
 
 The short answer turned out to be *yes, but not for the reason I expected*. See section 4.
 
-## 2. The data
+## 2\. The data
 
 US Consumer Financial Protection Bureau, Consumer Complaint Database. Public domain.
 Provenance and download date are in `data/raw/SOURCE.md`.
@@ -23,7 +23,7 @@ Provenance and download date are in `data/raw/SOURCE.md`.
 memory, so every script reads it in chunks.
 
 **The target had to change.** This project set out to predict whether a consumer
-*disputed* the company's response. `src/01_profile.py` checks the header before reading
+*disputed* the company's response. `src/01\_profile.py` checks the header before reading
 anything, and it stopped: CFPB no longer publishes *Consumer disputed?* or *Consumer
 consent provided?* in the export. The original target does not exist in the data.
 
@@ -31,38 +31,38 @@ The replacement is **Company response to consumer**, specifically whether it rea
 *Closed with monetary relief*. It is present for every year, and it is the outcome the
 dispute question was standing in for anyway — which complaints turn expensive.
 
-`src/02_filter.py` reports its own filtering:
+`src/02\_filter.py` reports its own filtering:
 
-| | |
-|---|---|
-| Rows read | 17,571,890 |
-| Dropped, older than the three-year window | 4,049,415 |
-| Dropped, no narrative published | 11,206,747 |
-| Dropped, no outcome recorded yet | 127 |
-| Rows kept | 2,315,601 (13.2% of the file) |
-| Window | Sep 2023 – Aug 2026 |
-| Closed with monetary relief | 1.78% (41,189 complaints) |
+|||
+|-|-|
+|Rows read|17,571,890|
+|Dropped, older than the three-year window|4,049,415|
+|Dropped, no narrative published|11,206,747|
+|Dropped, no outcome recorded yet|127|
+|Rows kept|2,315,601 (13.2% of the file)|
+|Window|Sep 2023 – Aug 2026|
+|Closed with monetary relief|1.78% (41,189 complaints)|
 
 Note which filter did the work. The three-year window dropped 4 million rows; the
 narrative requirement dropped 11.2 million. **Narratives are missing on 78% of the
 database** — they are only published when the consumer consents. This analysis is about
 complaints where someone agreed to publish their words, not about complaints in general.
 
-## 3. What I did
+## 3\. What I did
 
 ```
 pip install -r requirements.txt
-bash run_all.sh                 # or run the six scripts in src/ in order
+bash run\_all.sh                 # or run the six scripts in src/ in order
 ```
 
-| Stage | Script | What it produces |
-|---|---|---|
-| Profile | `src/01_profile.py` | `docs/data_profile.txt` — shape, nulls, coverage by year |
-| Filter | `src/02_filter.py` | `data/processed/complaints.csv` |
-| SQL | `src/03_load_sqlite.py` | SQLite database, plus every query in `sql/` run and saved |
-| Text features | `src/04_text_features.py` | hand-built flags and their relief rates |
-| Model | `src/05_model.py` | `docs/model_results.json` |
-| Dashboard | `src/06_build_figures.py` | `docs/figures.json`, read by the page |
+|Stage|Script|What it produces|
+|-|-|-|
+|Profile|`src/01\_profile.py`|`docs/data\_profile.txt` — shape, nulls, coverage by year|
+|Filter|`src/02\_filter.py`|`data/processed/complaints.csv`|
+|SQL|`src/03\_load\_sqlite.py`|SQLite database, plus every query in `sql/` run and saved|
+|Text features|`src/04\_text\_features.py`|hand-built flags and their relief rates|
+|Model|`src/05\_model.py`|`docs/model\_results.json`|
+|Dashboard|`src/06\_build\_figures.py`|`docs/figures.json`, read by the page|
 
 Eight SQL queries live in `sql/`, one per question, with one-sentence answers in
 `sql/findings.md`.
@@ -72,19 +72,19 @@ feature and model stages take a random 400,000-row sample of those, because the 
 needs several GB of memory and makes iteration too slow to be useful. The SQL in
 `sql/` still runs against every row. The sample is fixed by seed, so results reproduce.
 
-## 4. What I found
+## 4\. What I found
 
 **Relief is concentrated in a tenth of the volume.**
 
-| Product | Complaints | Relief cases | Relief rate |
-|---|---|---|---|
-| Credit reporting or other personal consumer reports | 1,661,995 | 1,038 | 0.1% |
-| Debt collection | 221,546 | 615 | 0.3% |
-| Checking or savings account | 110,183 | 13,922 | 12.6% |
-| Credit card | 108,718 | 17,841 | 16.4% |
-| Money transfer, virtual currency, or money service | 87,448 | 3,295 | 3.8% |
-| Mortgage | 37,718 | 739 | 2.0% |
-| Prepaid card | 10,199 | 2,017 | 19.8% |
+|Product|Complaints|Relief cases|Relief rate|
+|-|-|-|-|
+|Credit reporting or other personal consumer reports|1,661,995|1,038|0.1%|
+|Debt collection|221,546|615|0.3%|
+|Checking or savings account|110,183|13,922|12.6%|
+|Credit card|108,718|17,841|16.4%|
+|Money transfer, virtual currency, or money service|87,448|3,295|3.8%|
+|Mortgage|37,718|739|2.0%|
+|Prepaid card|10,199|2,017|19.8%|
 
 Credit reporting is **71.8% of all complaints and 2.5% of all payouts**. Prepaid card,
 credit card and checking together are **9.9% of complaints and 82.0% of payouts** — a
@@ -111,11 +111,11 @@ card complaints against a 19.8% product average.
 single row — every complaint in the filtered set arrived via the web, because CFPB only
 publishes narratives for web submissions. And median days from complaint received to
 complaint forwarded is 0.0 for every product, because CFPB forwards same-day. So
-`submitted_via` and `days_to_company` are constants carrying no information.
+`submitted\_via` and `days\_to\_company` are constants carrying no information.
 
 Full sentences for all eight queries are in `sql/findings.md`.
 
-## 5. The model, and what it is really doing
+## 5\. The model, and what it is really doing
 
 Logistic regression. Hand-built text flags, categorical context (product, issue, channel,
 state) and TF-IDF terms. **Split by time, not at random** — trained on the earlier part
@@ -124,15 +124,15 @@ of the window, tested on the later part, because that is how it would be used.
 `Company response to consumer` is the source of the label, so it is deliberately excluded
 from the features. Leaving it in would have leaked the answer.
 
-| | |
-|---|---|
-| Test period | 100,000 complaints, 2.59% relief rate |
-| Majority-class baseline accuracy | 97.41% |
-| ROC AUC | 0.953 |
-| Threshold | chosen to flag the top 10% by score |
-| Relief cases caught in that top 10% | 80.3% |
-| Precision at that threshold | 20.8% |
-| **Lift over reviewing 10% at random** | **8.03×** |
+|||
+|-|-|
+|Test period|100,000 complaints, 2.59% relief rate|
+|Majority-class baseline accuracy|97.41%|
+|ROC AUC|0.953|
+|Threshold|chosen to flag the top 10% by score|
+|Relief cases caught in that top 10%|80.3%|
+|Precision at that threshold|20.8%|
+|**Lift over reviewing 10% at random**|**8.03×**|
 
 Read the accuracy against 97.41%, not against zero. Predicting "no relief" every single
 time scores 97.41% on this data.
@@ -151,14 +151,14 @@ rather than leaving it as a hunch.
 ### How much of that is actually the text?
 
 Because the product field alone separates the classes so well, the model was run three
-times with the feature blocks switched on in layers (`src/05_model.py --features ...`).
-Full output in `docs/model_comparison.csv`.
+times with the feature blocks switched on in layers (`src/05\_model.py --features ...`).
+Full output in `docs/model\_comparison.csv`.
 
-| Features | ROC AUC | Avg precision | Precision @10% | Lift |
-|---|---|---|---|---|
-| Product only | 0.914 | 0.146 | 14.7% | 5.69× |
-| Product + hand-built flags | 0.930 | 0.194 | 17.9% | 6.92× |
-| Product + flags + TF-IDF | 0.953 | 0.328 | 20.8% | 8.02× |
+|Features|ROC AUC|Avg precision|Precision @10%|Lift|
+|-|-|-|-|-|
+|Product only|0.914|0.146|14.7%|5.69×|
+|Product + hand-built flags|0.930|0.194|17.9%|6.92×|
+|Product + flags + TF-IDF|0.953|0.328|20.8%|8.02×|
 
 **Product alone accounts for about 71% of the lift.** Knowing only which product line a
 complaint belongs to gets you 5.69× over random review, which matches the `GROUP BY`
@@ -181,35 +181,32 @@ really "these product lines", which sweeps in nearly every relief case along wit
 deal of noise. Precision, not recall, is the number to read here.
 
 **The recommendation, in one sentence:**
-_____________________________________________________________________________
 
-*(Yours to write, now that the ablation is in. The shape the evidence supports: route
-review capacity to the three high-relief product lines first, since that alone is worth
-5.69×, then use the text model to rank within them for the remaining 41% gain. Put a
-number in it that you can re-derive on paper.)*
+Relief is concentrated in three product lines — prepaid card, credit card, and checking or savings — which are 9.9% of complaint volume and 82% of all monetary relief. Routing manual review to those lines alone is worth 5.69x over random selection; scoring the complaint text within them lifts that to 8.02x, finding 41% more payouts for the same review headcount.
 
-## 6. What this does not tell you
+## 6\. What this does not tell you
 
-- About 71% of the model's lift comes from the product field alone. The complaint text
-  adds a real but secondary 29%. Anyone reading the 0.953 AUC as "the language predicts
-  payouts" would be overstating it by roughly threefold.
-- Monetary relief is a company's decision to pay, not a measure of who was wronged. A
-  firm that settles readily looks worse here than one that refuses everything.
-- Narratives are missing on 78% of the database and are only published with consent.
-  Whatever makes someone consent to publication may also relate to the outcome.
-- Complaints that reach CFPB are not a random sample of unhappy customers. People who
-  escalate to a federal regulator have already self-selected.
-- The base relief rate fell from 9.1% in 2012 to 0.9% in 2024 — the target is drifting
-  underneath the model, and the test period behaves differently from the training period.
-- **This covers web-submitted complaints only.** Narratives are only published for web
-  submissions, so the channel filter is implicit and nothing here generalises to
-  complaints arriving by phone, mail or referral.
-- Credit reporting complaints fall from 912,743 in 2025 to 4,818 in 2026, a 99.5% drop
-  that a partial year cannot explain. The 2026 slice sits inside the model's test period,
-  so this is not a cosmetic problem. It needs an explanation from CFPB before the 2026
-  data is relied on.
-- The feature and model stages run on a 400,000-row sample, not the full 2.3 million.
+* About 71% of the model's lift comes from the product field alone. The complaint text
+adds a real but secondary 29%. Anyone reading the 0.953 AUC as "the language predicts
+payouts" would be overstating it by roughly threefold.
+* Monetary relief is a company's decision to pay, not a measure of who was wronged. A
+firm that settles readily looks worse here than one that refuses everything.
+* Narratives are missing on 78% of the database and are only published with consent.
+Whatever makes someone consent to publication may also relate to the outcome.
+* Complaints that reach CFPB are not a random sample of unhappy customers. People who
+escalate to a federal regulator have already self-selected.
+* The base relief rate fell from 9.1% in 2012 to 0.9% in 2024 — the target is drifting
+underneath the model, and the test period behaves differently from the training period.
+* **This covers web-submitted complaints only.** Narratives are only published for web
+submissions, so the channel filter is implicit and nothing here generalises to
+complaints arriving by phone, mail or referral.
+* Credit reporting complaints fall from 912,743 in 2025 to 4,818 in 2026, a 99.5% drop
+that a partial year cannot explain. The 2026 slice sits inside the model's test period,
+so this is not a cosmetic problem. It needs an explanation from CFPB before the 2026
+data is relied on.
+* The feature and model stages run on a 400,000-row sample, not the full 2.3 million.
 
----
+\---
 
 Built by Yashas R · [github.com/yashasr21](https://github.com/yashasr21)
+
