@@ -96,12 +96,24 @@ it looks like it should claim.
 This concentration is the single largest effect in the project, and section 5 quantifies
 how much of the model is simply rediscovering it.
 
-*To fill in from `docs/query_output/` — see `sql/findings.md`:*
-- Do the highest-volume companies have the worst relief rates, or just the most complaints? (q2)
-- Which companies sit furthest above their own product's average? (q8) — this is the
-  query that controls for the product effect above, so it is the most useful one here.
-- Does the submission channel matter once you know the product? (q5)
-- Which issue types are growing? (q7)
+**Volume and cost rank companies almost inversely.** Equifax, TransUnion and Experian are
+**69.2% of all complaints and 0.34% of all monetary relief**. Bank of America is **0.97% of
+complaints and 16.5% of all relief** — a seventeenfold concentration. Staffing a review
+team by complaint count would point it at almost exactly the wrong companies.
+
+**Some companies are outliers within their own product line.** Controlling for the product
+effect above, Bank of America sits 2–3× its product average in three separate categories
+(checking 40.2% against 12.6%, credit card 38.2% against 16.4%, money transfer 21.3%
+against 3.8%). That cannot be product mix. American Express pays out on 56.4% of prepaid
+card complaints against a 19.8% product average.
+
+**Two queries came back degenerate, and both matter.** Relief rate by channel returned a
+single row — every complaint in the filtered set arrived via the web, because CFPB only
+publishes narratives for web submissions. And median days from complaint received to
+complaint forwarded is 0.0 for every product, because CFPB forwards same-day. So
+`submitted_via` and `days_to_company` are constants carrying no information.
+
+Full sentences for all eight queries are in `sql/findings.md`.
 
 ## 5. The model, and what it is really doing
 
@@ -189,6 +201,13 @@ number in it that you can re-derive on paper.)*
   escalate to a federal regulator have already self-selected.
 - The base relief rate fell from 9.1% in 2012 to 0.9% in 2024 — the target is drifting
   underneath the model, and the test period behaves differently from the training period.
+- **This covers web-submitted complaints only.** Narratives are only published for web
+  submissions, so the channel filter is implicit and nothing here generalises to
+  complaints arriving by phone, mail or referral.
+- Credit reporting complaints fall from 912,743 in 2025 to 4,818 in 2026, a 99.5% drop
+  that a partial year cannot explain. The 2026 slice sits inside the model's test period,
+  so this is not a cosmetic problem. It needs an explanation from CFPB before the 2026
+  data is relied on.
 - The feature and model stages run on a 400,000-row sample, not the full 2.3 million.
 
 ---
