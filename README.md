@@ -93,6 +93,9 @@ hundredfold spread in relief rate between the top and bottom product lines.
 That single fact reframes the whole project, and it is why section 5 does not claim what
 it looks like it should claim.
 
+This concentration is the single largest effect in the project, and section 5 quantifies
+how much of the model is simply rediscovering it.
+
 *To fill in from `docs/query_output/` — see `sql/findings.md`:*
 - Do the highest-volume companies have the worst relief rates, or just the most complaints? (q2)
 - Which companies sit furthest above their own product's average? (q8) — this is the
@@ -122,30 +125,62 @@ from the features. Leaving it in would have leaked the answer.
 Read the accuracy against 97.41%, not against zero. Predicting "no relief" every single
 time scores 97.41% on this data.
 
-**The honest reading of that 0.953.** Look again at the product table. Selecting the three
+**Why that 0.953 needed checking.** Look again at the product table. Selecting the three
 product lines with the highest relief rates — also about 10% of volume — captures 82% of
-relief cases. A `GROUP BY` matches the model. So most of the AUC is the model learning
-which product a complaint is about, not learning what the complaint says. The top-weighted
-text terms support this: many of them are company names (comenity, coinbase, citibank,
-amex) rather than descriptions of what went wrong, alongside a few genuine content words
-(atm, refund, escrow, escalated).
+relief cases. A `GROUP BY` gets most of the way there on its own, which is a strong hint
+that a model scoring 0.953 might be learning product identity rather than language. The
+top-weighted text terms reinforce the suspicion: many are company names (comenity,
+coinbase, citibank, amex) rather than descriptions of what went wrong, though genuine
+content words appear alongside them (atm, refund, escrow, escalated).
 
-**Outstanding experiment.** Run the model three ways — product only, product plus the
-hand-built flags, and everything including TF-IDF — and report how much lift each layer
-adds. Until that is done, this README should not claim the text is doing the work.
+That suspicion turned out to be about 71% right, and the ablation below quantifies it
+rather than leaving it as a hunch.
+
+### How much of that is actually the text?
+
+Because the product field alone separates the classes so well, the model was run three
+times with the feature blocks switched on in layers (`src/05_model.py --features ...`).
+Full output in `docs/model_comparison.csv`.
+
+| Features | ROC AUC | Avg precision | Precision @10% | Lift |
+|---|---|---|---|---|
+| Product only | 0.914 | 0.146 | 14.7% | 5.69× |
+| Product + hand-built flags | 0.930 | 0.194 | 17.9% | 6.92× |
+| Product + flags + TF-IDF | 0.953 | 0.328 | 20.8% | 8.02× |
+
+**Product alone accounts for about 71% of the lift.** Knowing only which product line a
+complaint belongs to gets you 5.69× over random review, which matches the `GROUP BY`
+result above and confirms the product effect is the single biggest signal.
+
+**The text adds the remaining 29%, and it is real.** Average precision more than doubles
+from 0.146 to 0.328. In operational terms: reviewing the same 10,000 complaints, the full
+model surfaces 20.8% genuine relief cases against 14.7% for product routing alone — **41%
+more payouts found for the same review effort.**
+
+The hand-built flags and the TF-IDF terms contribute roughly equally, which is worth
+noting: seven explainable flags recover about half of what 15,000 opaque TF-IDF features
+do. If the model had to be defensible to a compliance team, the flags-only version costs
+little and explains itself.
+
+One caveat on the product-only row. Its recall at the 10% threshold is *higher* than the
+full model's (82.4% against 80.2%) while its precision is much lower. That is because a
+product-only model can only assign a handful of distinct scores, so its "top 10%" is
+really "these product lines", which sweeps in nearly every relief case along with a great
+deal of noise. Precision, not recall, is the number to read here.
 
 **The recommendation, in one sentence:**
 _____________________________________________________________________________
 
-*(Write this after the experiment above. The defensible version is closer to "relief is
-concentrated in three product lines that are a tenth of complaint volume, so route review
-capacity there first and use the text model to rank within them" than to "score every
-complaint on arrival".)*
+*(Yours to write, now that the ablation is in. The shape the evidence supports: route
+review capacity to the three high-relief product lines first, since that alone is worth
+5.69×, then use the text model to rank within them for the remaining 41% gain. Put a
+number in it that you can re-derive on paper.)*
 
 ## 6. What this does not tell you
 
-- Most of the model's performance is product mix, not language. Section 5 says so, and
-  the experiment that would quantify it has not been run yet.
+- About 71% of the model's lift comes from the product field alone. The complaint text
+  adds a real but secondary 29%. Anyone reading the 0.953 AUC as "the language predicts
+  payouts" would be overstating it by roughly threefold.
 - Monetary relief is a company's decision to pay, not a measure of who was wronged. A
   firm that settles readily looks worse here than one that refuses everything.
 - Narratives are missing on 78% of the database and are only published with consent.

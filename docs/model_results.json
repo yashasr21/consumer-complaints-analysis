@@ -8,9 +8,9 @@
   "average_precision": 0.328,
   "review_capacity_pct": 10,
   "threshold": 0.748,
-  "recall_at_capacity_pct": 80.3,
+  "recall_at_capacity_pct": 80.2,
   "precision_at_capacity_pct": 20.8,
-  "lift_vs_random": 8.03,
+  "lift_vs_random": 8.02,
   "top_terms": [
     "comenity",
     "coinbase",
@@ -32,5 +32,6 @@
     "amex",
     "manage",
     "orders"
-  ]
+  ],
+  "feature_set": "all"
 }

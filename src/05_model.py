@@ -20,6 +20,7 @@ The threshold is picked from the precision-recall curve rather than left at
 Run:  python src/05_model.py
 """
 
+import argparse
 import json
 import os
 import sys
@@ -41,6 +42,7 @@ FEATS = os.path.join("data", "processed", "features.csv")
 NARR = os.path.join("data", "processed", "complaints.csv")
 OUT = os.path.join("docs", "model_results.json")
 CURVE = os.path.join("docs", "pr_curve.csv")
+COMPARE = os.path.join("docs", "model_comparison.csv")
 
 REVIEW_CAPACITY = 0.10  # the team can manually review 10% of arrivals
 
@@ -53,6 +55,13 @@ def time_split(df, frac=0.75):
 
 
 def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--features", default="all",
+                    choices=["product", "product+flags", "all"],
+                    help="which layer of features to use, for the ablation")
+    args = ap.parse_args()
+    level = args.features
+
     if not os.path.exists(FEATS):
         print(f"No file at {FEATS}. Run src/04_text_features.py first.")
         sys.exit(1)
@@ -84,24 +93,32 @@ def main():
             {"complaint_id", "date_received", "product", "issue", "company", "state",
              "submitted_via", "monetary_relief", "narrative"}]
 
-    # Hand-built numeric features.
-    Xtr_num = csr_matrix(train[hand].fillna(0).astype(float).values)
-    Xte_num = csr_matrix(test[hand].fillna(0).astype(float).values)
-
-    # Categorical context.
-    cats = ["product", "issue", "submitted_via", "state"]
+    # Build the feature blocks in layers, so each can be switched off. The point
+    # of the ablation is to find out how much of the score is the product field
+    # and how much is anything the consumer actually wrote.
+    cats = ["product"] if level != "all" else ["product", "issue", "submitted_via", "state"]
     enc = OneHotEncoder(handle_unknown="ignore", min_frequency=50)
-    Xtr_cat = enc.fit_transform(train[cats].astype(str))
-    Xte_cat = enc.transform(test[cats].astype(str))
+    blocks_tr = [enc.fit_transform(train[cats].astype(str))]
+    blocks_te = [enc.transform(test[cats].astype(str))]
+    described = [f"categorical ({', '.join(cats)})"]
 
-    # Text, fitted on train only so the test period stays unseen.
-    tfidf = TfidfVectorizer(max_features=15_000, ngram_range=(1, 2),
-                            min_df=5, stop_words="english", sublinear_tf=True)
-    Xtr_txt = tfidf.fit_transform(train["narrative"])
-    Xte_txt = tfidf.transform(test["narrative"])
+    if level in ("product+flags", "all"):
+        blocks_tr.append(csr_matrix(train[hand].fillna(0).astype(float).values))
+        blocks_te.append(csr_matrix(test[hand].fillna(0).astype(float).values))
+        described.append(f"{len(hand)} hand-built text flags")
 
-    Xtr = hstack([Xtr_num, Xtr_cat, Xtr_txt]).tocsr()
-    Xte = hstack([Xte_num, Xte_cat, Xte_txt]).tocsr()
+    tfidf = None
+    if level == "all":
+        # Fitted on train only, so the test period stays unseen.
+        tfidf = TfidfVectorizer(max_features=15_000, ngram_range=(1, 2),
+                                min_df=5, stop_words="english", sublinear_tf=True)
+        blocks_tr.append(tfidf.fit_transform(train["narrative"]))
+        blocks_te.append(tfidf.transform(test["narrative"]))
+        described.append("TF-IDF, 15k terms")
+
+    print(f"Feature set '{level}': " + " + ".join(described) + "\n")
+    Xtr = hstack(blocks_tr).tocsr()
+    Xte = hstack(blocks_te).tocsr()
     ytr, yte = train["monetary_relief"].values, test["monetary_relief"].values
 
     model = LogisticRegression(max_iter=1000, class_weight="balanced", C=0.5,
@@ -135,12 +152,14 @@ def main():
     print(classification_report(yte, (prob >= cutoff).astype(int),
                                target_names=["no relief", "monetary relief"], digits=3))
 
-    # Twenty highest-weighted text terms, to check against what you read by hand.
-    names = np.array(tfidf.get_feature_names_out())
-    text_coefs = model.coef_[0][-len(names):]
-    top = names[np.argsort(text_coefs)[-20:][::-1]]
-    print("Top 20 text terms pushing towards monetary relief:")
-    print(", ".join(top))
+    top = []
+    if tfidf is not None:
+        # Twenty highest-weighted text terms, to check against what you read by hand.
+        names = np.array(tfidf.get_feature_names_out())
+        text_coefs = model.coef_[0][-len(names):]
+        top = list(names[np.argsort(text_coefs)[-20:][::-1]])
+        print("Top 20 text terms pushing towards monetary relief:")
+        print(", ".join(top))
 
     results = {
         "train_rows": int(len(train)),
@@ -155,11 +174,25 @@ def main():
         "recall_at_capacity_pct": round(float(caught) * 100, 1),
         "precision_at_capacity_pct": round(float(precision_at_cut) * 100, 1),
         "lift_vs_random": round(float(lift), 2),
-        "top_terms": top.tolist(),
+        "top_terms": top,
     }
-    with open(OUT, "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=2)
-    print(f"\nWritten to {OUT}")
+    results["feature_set"] = level
+
+    # Only the full model feeds the dashboard; the ablation runs must not
+    # overwrite the published numbers with a deliberately crippled model.
+    if level == "all":
+        with open(OUT, "w", encoding="utf-8") as f:
+            json.dump(results, f, indent=2)
+        print(f"\nWritten to {OUT}")
+
+    row = pd.DataFrame([{k: results[k] for k in
+                         ("feature_set", "roc_auc", "average_precision",
+                          "recall_at_capacity_pct", "precision_at_capacity_pct",
+                          "lift_vs_random")}])
+    row.to_csv(COMPARE, mode="a", header=not os.path.exists(COMPARE), index=False)
+    print(f"Appended to {COMPARE}")
+    if os.path.exists(COMPARE):
+        print("\n" + pd.read_csv(COMPARE).to_string(index=False))
     print("\nPhase 6: the lift number above is your README opening sentence.")
 
 

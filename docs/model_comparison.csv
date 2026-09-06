@@ -1,0 +1,4 @@
+feature_set,roc_auc,average_precision,recall_at_capacity_pct,precision_at_capacity_pct,lift_vs_random
+product,0.914,0.146,82.4,14.7,5.69
+product+flags,0.93,0.194,69.2,17.9,6.92
+all,0.953,0.328,80.2,20.8,8.02

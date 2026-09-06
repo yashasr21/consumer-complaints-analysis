@@ -81,5 +81,13 @@ the machine learning model, which strongly suggests the model is mostly learning
 identity. The top-weighted TF-IDF terms back this up — many are company names rather than
 descriptions of a problem.
 
-Next: run it three ways (product only / product + hand-built flags / everything) and
-report what each layer actually adds. Not writing a recommendation until that is done.
+Ran it three ways. Product only 5.69x lift, plus hand-built flags 6.92x, plus TF-IDF
+8.02x. So product alone is about 71% of the lift and the text is the other 29% — my
+suspicion was right in direction but I would have overstated it if I had written "the
+text does nothing". Average precision doubling from 0.146 to 0.328 is the number that
+convinced me the text is genuinely contributing rather than just reshuffling ties.
+
+The odd row is product-only recall at 82.4%, higher than the full model's 80.2% despite
+being a much worse model. A product-only model can only emit a few distinct scores, so
+its top 10% is really "these product lines" and it sweeps in almost every relief case at
+terrible precision. Reading recall alone would have made the worst model look best.
